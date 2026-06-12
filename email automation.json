@@ -1,0 +1,276 @@
+{
+  "name": "email automation",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {
+          "q": "has:attachment filename:pdf",
+          "readStatus": "unread"
+        }
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        -96
+      ],
+      "id": "ee49cf2d-1492-47f8-ab4c-a8b5609b05bf",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bwge33yQdWr1Lje4",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "messageId": "={{ $json.id }}",
+        "simple": false,
+        "options": {
+          "downloadAttachments": true
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        224,
+        -96
+      ],
+      "id": "d9abd7e7-a2fb-43a7-96ab-3c3d81a6e972",
+      "name": "Get a message",
+      "webhookId": "3b9a08bc-fcea-4108-8965-5563422a3257",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bwge33yQdWr1Lje4",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Extract data from the following PDF text and return ONLY valid JSON, no explanation, no extra text:\n\n{\n  \"sender_name\": \"\",\n  \"date\": \"\",\n  \"title\": \"\",\n  \"description\": \"\"\n}\n\nPDF Text:\n{{ $json.text }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        672,
+        -96
+      ],
+      "id": "6c259e31-7b98-4381-a8bf-26fa3d34a338",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "OuWxO9SLad55tIMT",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "attachment_0",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        448,
+        -96
+      ],
+      "id": "5ad9d79b-3b24-46d4-92f0-03b49172ac83",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1yXa-yAcVv0Bpnj0JGPsTohIrHH5loHqMWdRS-HjcDZA",
+          "mode": "list",
+          "cachedResultName": "emails data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1yXa-yAcVv0Bpnj0JGPsTohIrHH5loHqMWdRS-HjcDZA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1yXa-yAcVv0Bpnj0JGPsTohIrHH5loHqMWdRS-HjcDZA/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "sender name": "={{ $json.sender_name }}",
+            "title": "={{ $json.title }}",
+            "date": "={{ $json.date }}",
+            "description": "={{ $json.description }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "sender name",
+              "displayName": "sender name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "description",
+              "displayName": "description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1024,
+        -96
+      ],
+      "id": "f4db5c60-e617-4b70-9949-28ba4f3ff583",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "ZiodZps1dDGl9tnJ",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $('Message a model').item.json.content.parts[0].text;\nconst cleaned = raw.replace(/```json\\n|```/g, '').trim();\nconst parsed = JSON.parse(cleaned);\nreturn [{ json: parsed }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        832,
+        32
+      ],
+      "id": "8d43178e-e961-4341-ad5a-b9e03f349bb8",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a message": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "59b41829-ba58-484e-acdf-ce707f9a9cc9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "28eb30274ce7869d1ce162ca789cab35b717118a0a885e6199095f51e5fe3c23"
+  },
+  "nodeGroups": [],
+  "id": "lWWd2gHXgGGwTEh6",
+  "tags": []
+}
